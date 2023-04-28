@@ -59,7 +59,7 @@ def retrain_model():
 model = retrain_model()
 
 
-def export_pickle(model):
+def save_pickle(model):
     # Pickle
     pkl_filename = "model/setfit_model.pkl"
     with open(pkl_filename, 'wb') as file:
@@ -67,7 +67,7 @@ def export_pickle(model):
     message = "\nModel exported to pkl format.\n"
     print("~" * len(message) + message + "~" * len(message))
 
-def export_onnx(model):
+def save_onnx(model):
     # Export the sklearn based model
     output_path = "model/setfit_model.onnx"
     export_onnx(model.model_body,
@@ -78,5 +78,5 @@ def export_onnx(model):
     print("~" * len(message) + message + "~" * len(message))
 
 
-export_pickle(model)
-export_onnx(model)
+save_pickle(model)
+save_onnx(model)
