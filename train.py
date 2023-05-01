@@ -50,7 +50,8 @@ def retrain_model():
     # Train and evaluate
     trainer.train()
     metrics = trainer.evaluate()
-    print("************\nModel sucessfully retrained.\n************")
+    message = "\nModel sucessfully retrained.\n"
+    print("~" * len(message) + "~" * len(message))
     # print(trainer.model.model_head.classes_)
     # print(model.model_head.classes_)
     return model
