@@ -3,7 +3,7 @@ from sentence_transformers.losses import CosineSimilarityLoss
 from setfit import SetFitModel, SetFitTrainer, sample_dataset
 from setfit.exporters.onnx import export_onnx
 import pickle
-import pandas as pd
+import onnxruntime as rt
 
 #https://github.com/huggingface/setfit/tree/main/src/setfit
 
@@ -11,25 +11,8 @@ def retrain_model():
     # Load a dataset from the Hugging Face Hub
     dataset = load_dataset("sst2")
 
-    # Simulate the few-shot regime by sampling 8 examples per class
-    # candidate_labels = ["negative", "positive"]
-    # train_dataset = sample_dataset(dataset["train"],candidate_labels=candidate_labels, num_samples=8)
-
-    # print(dataset.data)
-
     train_dataset = sample_dataset(dataset["train"],label_column="label", num_samples=8)
     eval_dataset = dataset["validation"]
-
-
-    # # Add human readable labels
-    # train_dataset_2 = pd.DataFrame(train_dataset).copy(deep=True)
-    # train_dataset_2['label'].replace(['Positive'],1, inplace=True)
-    # train_dataset_2['label'].replace(['Negative'],0, inplace=True)
-
-    # eval_dataset_2 = pd.DataFrame(eval_dataset).copy(deep=True)
-    # eval_dataset_2['label'].replace(['Positive'],1, inplace=True)
-    # eval_dataset_2['label'].replace(['Negative'],0, inplace=True)
-
 
     # Load a SetFit model from Hub
     model = SetFitModel.from_pretrained("sentence-transformers/paraphrase-mpnet-base-v2")
