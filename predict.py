@@ -17,7 +17,7 @@ def pickle_predict(input_text):
     pytorch_preds = pickle_model(input_text)
     return pytorch_preds
 
-pytorch_preds = pickle_predict(input_text)
+# pytorch_preds = pickle_predict(input_text)
 
 
 def onnx_predict(input_text):
@@ -37,20 +37,38 @@ def onnx_predict(input_text):
 
     onnx_preds = session.run(None, dict(inputs))[0]
 
-    onnx_message = '\nSetFit onnx model sentiment prediction: \n{onnx_preds}\n' 
+    labeled_onnx_preds = list(map(labeler, onnx_preds))
+
+    onnx_message = f'\nSetFit onnx model sentiment prediction: \n{labeled_onnx_preds}\n' 
     print("~" * len(onnx_message) + onnx_message + "~" * len(onnx_message))
 
     return onnx_preds
+
+
+def labeler (onnx_preds):
+
+    labeled_onnx_preds = ""
+
+    match onnx_preds:
+        case 0:
+            labeled_onnx_preds = "Negative"
+        case 1:
+            labeled_onnx_preds = "Positive"
+        case _:
+            print ("Invalid prediction output.")
+
+    return labeled_onnx_preds
 
 
 onnx_preds = onnx_predict(input_text)
 
 
 def compare_pickle_onnx(pytorch_preds,onnx_preds):
-    pkl_message = '\nPkl model prediction: {pytorch_preds}\n'
-    onnx_message = '\nOnnx model prediction: {onnx_preds}\n' 
+    """ Compare UNLABELED onnx and pkl predictions """
+    pkl_message = f'\nPkl model prediction: {pytorch_preds}\n'
+    onnx_message = f'\nOnnx model prediction: {onnx_preds}\n' 
     print("~" * len(pkl_message) + pkl_message + onnx_message + "~" * len(onnx_message))
     assert np.array_equal(onnx_preds, pytorch_preds)
 
-
-compare_pickle_onnx()
+## Compare onnx and pkl output
+# compare_pickle_onnx()
