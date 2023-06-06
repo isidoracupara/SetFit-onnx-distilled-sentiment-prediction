@@ -2,12 +2,26 @@ import numpy as np
 import onnxruntime
 from transformers import AutoTokenizer
 import pickle
+import time
+
+def timer(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        return result, execution_time
+    return wrapper
+
 
 #https://github.com/huggingface/setfit/blob/main/notebooks/onnx_model_export.ipynb
 
-input_text = ["i loved the spiderman movie!", "pineapple on pizza is the worst 🤮"]
+input_text = ["i loved the spiderman movie!", "pineapple on pizza is the worst 🤮", "I quit my job to look for new exciting opportunities"]
+# look at embedding
 
 
+## F1
+@timer
 def pickle_predict(input_text):
     # Run inference using the original model
     pkl_filename = "model/setfit_model.pkl"
@@ -15,12 +29,12 @@ def pickle_predict(input_text):
         pickle_model = pickle.load(file)
 
     pytorch_preds = pickle_model(input_text)
-    return pytorch_preds
+    labeled_pkl_preds = list(map(labeler, pytorch_preds))
 
-# pytorch_preds = pickle_predict(input_text)
+    return labeled_pkl_preds
 
-
-def onnx_predict(input_text):
+@timer
+def onnx_predict(input_text, outputh_path):
     # Run inference using onnx model
     tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/paraphrase-mpnet-base-v2")
     inputs = tokenizer(
@@ -32,43 +46,52 @@ def onnx_predict(input_text):
         return_tensors="np",
     )
 
-    output_path="model/setfit_model.onnx"
+
+    output_path=outputh_path
     session = onnxruntime.InferenceSession(output_path)
 
     onnx_preds = session.run(None, dict(inputs))[0]
 
     labeled_onnx_preds = list(map(labeler, onnx_preds))
 
-    onnx_message = f'\nSetFit onnx model sentiment prediction: \n{labeled_onnx_preds}\n' 
-    print("~" * len(onnx_message) + onnx_message + "~" * len(onnx_message))
+    # accuracy(session)
 
-    return onnx_preds
+    # metrics = trainer.evaluate()
 
+    # onnx_message = f'\nSetFit onnx model sentiment prediction: \n{labeled_onnx_preds}\n' 
+    # print("~" * len(onnx_message) + onnx_message + "~" * len(onnx_message))
 
-def labeler (onnx_preds):
-
-    labeled_onnx_preds = ""
-
-    match onnx_preds:
-        case 0:
-            labeled_onnx_preds = "Negative"
-        case 1:
-            labeled_onnx_preds = "Positive"
-        case _:
-            print ("Invalid prediction output.")
-
+    # return {"prediction": labeled_onnx_preds, "time": time, "metrics": metrics }
     return labeled_onnx_preds
 
 
-onnx_preds = onnx_predict(input_text)
+def labeler(preds):
+
+    labeled_preds = ""
+
+    match preds:
+        case 0:
+            labeled_preds = "Negative"
+        case 1:
+            labeled_preds = "Positive"
+        case _:
+            print ("Invalid prediction output.")
+
+    return labeled_preds
 
 
-def compare_pickle_onnx(pytorch_preds,onnx_preds):
-    """ Compare UNLABELED onnx and pkl predictions """
+pytorch_preds = pickle_predict(input_text)
+onnx_preds = onnx_predict(input_text, "model/setfit_model.onnx")
+distilled_onnx_preds = onnx_predict(input_text, "model/setfit_model_distilled.onnx")
+
+@timer
+def compare_pickle_onnx(pytorch_preds,onnx_preds, distilled_onnx_preds):
+    """ Compare onnx and pkl predictions """
     pkl_message = f'\nPkl model prediction: {pytorch_preds}\n'
-    onnx_message = f'\nOnnx model prediction: {onnx_preds}\n' 
-    print("~" * len(pkl_message) + pkl_message + onnx_message + "~" * len(onnx_message))
-    assert np.array_equal(onnx_preds, pytorch_preds)
+    onnx_message = f'\nOnnx model prediction: {onnx_preds}\n'
+    distilled_onnx_message =  f'\nDistilled onnx model prediction: {distilled_onnx_preds}\n'
+    print("~" * len(pkl_message) + pkl_message + "~" * len(pkl_message) + "\n" + "~" * len(onnx_message) + onnx_message + "~" * len(onnx_message)  + "\n" + "~" * len(distilled_onnx_message) + distilled_onnx_message + "~" * len(distilled_onnx_message))
 
-## Compare onnx and pkl output
-# compare_pickle_onnx()
+
+# Compare onnx and pkl output
+compare_pickle_onnx(pytorch_preds,onnx_preds, distilled_onnx_preds)
