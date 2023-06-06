@@ -131,3 +131,4 @@ dmypy.json
 /model
 task.docx
 /test
+.DS_Store
