@@ -130,5 +130,6 @@ dmypy.json
 
 /model
 task.docx
-/test
+/tests
 .DS_Store
+.python_packages
