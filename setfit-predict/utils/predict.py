@@ -2,7 +2,6 @@ import onnxruntime
 from transformers import AutoTokenizer
 import pickle
 import time
-from load_file import load_model
 
 # input_text = ["i loved the spiderman movie!", "pineapple on pizza is the worst 🤮", "I quit my job to look for new exciting opportunities"]
 
