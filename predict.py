@@ -17,10 +17,8 @@ def timer(func):
 #https://github.com/huggingface/setfit/blob/main/notebooks/onnx_model_export.ipynb
 
 input_text = ["i loved the spiderman movie!", "pineapple on pizza is the worst 🤮", "I quit my job to look for new exciting opportunities"]
-# look at embedding
 
 
-## F1
 @timer
 def pickle_predict(input_text):
     # Run inference using the original model
@@ -54,14 +52,6 @@ def onnx_predict(input_text, outputh_path):
 
     labeled_onnx_preds = list(map(labeler, onnx_preds))
 
-    # accuracy(session)
-
-    # metrics = trainer.evaluate()
-
-    # onnx_message = f'\nSetFit onnx model sentiment prediction: \n{labeled_onnx_preds}\n' 
-    # print("~" * len(onnx_message) + onnx_message + "~" * len(onnx_message))
-
-    # return {"prediction": labeled_onnx_preds, "time": time, "metrics": metrics }
     return labeled_onnx_preds
 
 
