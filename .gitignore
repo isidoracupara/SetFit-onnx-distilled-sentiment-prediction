@@ -128,7 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-/model
+setfit_model.onnx
+setfit_model.pkl
 task.docx
-/test
+/tests
 .DS_Store

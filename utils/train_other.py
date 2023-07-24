@@ -6,19 +6,18 @@ import pickle
 
 #https://github.com/huggingface/setfit/tree/main/src/setfit
 
-def retrain_model(distilled = 0):
-    """Retrains model, takes arg distilled: 0 for no 1 for yes"""
+def retrain_model(distilled = False):
     
     global model_name
 
     match distilled:
-        case "0":
+        case False:
             model_name = "regular"
 
             # Load a dataset from the Hugging Face Hub
             dataset = load_dataset("sst2")
 
-            train_dataset = sample_dataset(dataset["train"],label_column="label", num_samples=8)
+            train_dataset = sample_dataset(dataset["train"],label_column="label")
             eval_dataset = dataset["validation"]
 
             # Load a SetFit model from Hub
@@ -44,14 +43,16 @@ def retrain_model(distilled = 0):
             print("~" * len(message) + "~" * len(message))
             # print(trainer.model.model_head.classes_)
             # print(model.model_head.classes_)
+
+            return trainer
         
-        case 1:
+        case True:
             model_name = "distilled"
 
             # Load a dataset from the Hugging Face Hub
             dataset = load_dataset("sst2")
 
-            train_dataset_teacher = sample_dataset(dataset["train"],label_column="label", num_samples=8)
+            train_dataset_teacher = sample_dataset(dataset["train"],label_column="label")
             train_dataset_student = dataset["train"].shuffle(seed=0).select(range(500))
             eval_dataset = dataset["validation"]
 
@@ -74,10 +75,9 @@ def retrain_model(distilled = 0):
 
             # Train and evaluate
             teacher_trainer.train()
+            # teacher_trainer.apply_hyperparameters()
             metrics = teacher_trainer.evaluate()
 
-
-            ## MORE EPOCHS
             student_model = SetFitModel.from_pretrained("paraphrase-MiniLM-L3-v2")
 
             # Create trainer for knowledge distillation
@@ -101,7 +101,7 @@ def retrain_model(distilled = 0):
             print("~" * len(message) + "~" * len(message))
             # print(trainer.model.model_head.classes_)
             # print(model.model_head.classes_)
-            model = student_model
+            model = student_trainer
 
             return model
 
@@ -137,5 +137,4 @@ def export_model(model, extension):
         #     convert_onnx(model_path=model_path,output_dir=output_dir)
 
 
-export_model(retrain_model(1), "onnx")
-
+export_model(retrain_model(), "onnx")
